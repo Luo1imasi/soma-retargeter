@@ -134,6 +134,7 @@ SOMA Retargeter is a support tool within the SOMA ecosystem for humanoid motion 
 * [SOMA Body Model](https://github.com/NVlabs/SOMA-X) - Parametric human body model with standardized skeleton, mesh, and shape parameters
 * [GEM-X](https://github.com/NVlabs/GEM-X) - Human motion estimation from video
 * [Kimodo](https://research-staging.nvidia.com/labs/sil/projects/kimodo/) - Kinematic motion diffusion model for text and constraint-driven 3D human and robot motion generation
+* [ProtoMotions](https://github.com/NVlabs/ProtoMotions) - GPU-accelerated simulation and learning framework for training physically simulated digital humans and humanoid robots
 * [SONIC](https://nvlabs.github.io/GEAR-SONIC/) - Whole-body control for humanoid robots, training locomotion and interaction policies
 
 ## License
