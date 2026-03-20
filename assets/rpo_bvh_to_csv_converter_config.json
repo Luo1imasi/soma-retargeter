@@ -1,0 +1,9 @@
+{
+	"import_folder": "assets/motions/kimodo",
+	"export_folder": "assets/motions/kimodo-export",
+	"batch_size": 100,
+	"retargeter": "Newton",
+	"retarget_source": "soma",
+	"retarget_target": "roboparty_rpo",
+	"retarget_source_facing_direction": "Mujoco"
+}

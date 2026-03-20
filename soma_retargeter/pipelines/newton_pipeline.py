@@ -69,10 +69,15 @@ class NewtonPipeline:
         self.smooth_joint_filter_coord_masks = None
         self.joint_limit_clamper = None
 
-        if (self.target_type == pipeline_utils.TargetType.UNITREE_G1):
+        if (self.target_type in (pipeline_utils.TargetType.UNITREE_G1, pipeline_utils.TargetType.ROBOPARTY_RPO)):
             self.robot_builder = newton.ModelBuilder()
-            self.robot_builder.add_mjcf(
-                newton.utils.download_asset("unitree_g1") / "mjcf/g1_29dof_rev_1_0.xml")
+            if self.target_type == pipeline_utils.TargetType.UNITREE_G1:
+                self.robot_builder.add_mjcf(
+                    newton.utils.download_asset("unitree_g1") / "mjcf/g1_29dof_rev_1_0.xml")
+            else:
+                import os
+                robot_mjcf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../assets/robots/atom01/mjcf/atom01.xml"))
+                self.robot_builder.add_mjcf(robot_mjcf_path)
 
             self.human_robot_scaler = HumanToRobotScaler(
                 skeleton, retargeter_config['model_height'], io_utils.get_config_file(retargeter_config['human_robot_scaler_config']))

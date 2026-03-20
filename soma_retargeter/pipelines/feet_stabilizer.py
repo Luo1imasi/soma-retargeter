@@ -28,10 +28,15 @@ class FeetStabilizer:
         """
         self._load_config(config)
 
-        if self.robot_type == 'unitree_g1':
+        if self.robot_type in ('unitree_g1', 'roboparty_rpo'):
             self.robot_builder = newton.ModelBuilder()
-            self.robot_builder.add_mjcf(
-                newton.utils.download_asset("unitree_g1") / "mjcf/g1_29dof_rev_1_0.xml")
+            if self.robot_type == 'unitree_g1':
+                self.robot_builder.add_mjcf(
+                    newton.utils.download_asset("unitree_g1") / "mjcf/g1_29dof_rev_1_0.xml")
+            else:
+                import os
+                robot_mjcf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../assets/robots/atom01/mjcf/atom01.xml"))
+                self.robot_builder.add_mjcf(robot_mjcf_path)
 
             self.num_body_count = self.robot_builder.body_count
             self.ik_model = self._build_model(1)
