@@ -328,7 +328,9 @@ class Viewer:
                     defaultextension=".csv",
                     filetypes=[("CSV files", "*.csv")])
                 if save_path:
-                    csv_utils.save_csv(save_path, self.robot_csv_animation_buffers[0])
+                    # csv_utils.save_csv(save_path, self.robot_csv_animation_buffers[0])
+                    retarget_target = self.retarget_target_options[self.retarget_target_idx]
+                    csv_utils.save_csv_npz_compatible(save_path, self.robot_csv_animation_buffers[0], retarget_target)
 
             if self.robot_csv_animation_buffers[0] is None:
                 ui.end_disabled()
@@ -473,7 +475,8 @@ class Viewer:
                     csv_buffer = csv_buffers[i]
                     dst_path = export_path / pathlib.Path(batch[i]).relative_to(import_path).with_suffix(".csv")
                     dst_path.parent.mkdir(parents=True, exist_ok=True)
-                    csv_utils.save_csv(dst_path, csv_buffer)
+                    # csv_utils.save_csv(dst_path, csv_buffer)
+                    csv_utils.save_csv_npz_compatible(dst_path, csv_buffer, retarget_target)
 
             nb_retargeted_motions += len(batch)
 

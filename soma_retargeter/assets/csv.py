@@ -22,6 +22,15 @@ class RobotCSVConfig(Protocol):
         ...
 
 
+class RobotNPZCSVConfig(Protocol):
+    """Protocol for CSV configs compatible with csv_to_npz.py format."""
+    name: str
+    
+    def to_csv_row(self, anim_row: np.ndarray) -> List[float]:
+        """Convert animation buffer row to CSV row (no frame index, no header)."""
+        ...
+
+
 @dataclass
 class UnitreeG129DOF_CSVConfig:
     name: str = "unitree_g1_29dof"
@@ -136,4 +145,150 @@ def save_csv(file_path: str, buffer: CSVAnimationBuffer, csv_config: RobotCSVCon
         for i in range(buffer.num_frames):
             data = buffer.get_data(i)
             row = csv_config.to_csv_row(i, data)
+            writer.writerow(row)
+
+
+@dataclass
+class UnitreeG129DOF_NPZCSVConfig:
+    """
+    CSV configuration compatible with csv_to_npz.py format.
+    
+    Output format (no header, no frame index):
+    - Columns 0-2: root position (x, y, z) in meters
+    - Columns 3-6: root rotation as quaternion (x, y, z, w)
+    - Columns 7+: joint angles in radians
+    """
+    name: str = "unitree_g1_29dof_npz"
+    
+    def to_csv_row(self, anim_row: np.ndarray) -> List[float]:
+        """
+        Convert one anim buffer row into a CSV row compatible with csv_to_npz.py.
+        
+        anim_row format: [tx, ty, tz, qx, qy, qz, qw, joint_0, joint_1, ...]
+        output format: [tx, ty, tz, qx, qy, qz, qw, joint_0, joint_1, ...]
+        """
+        # Position is already in meters, quaternion already in xyzw, joints already in radians
+        return anim_row.tolist()
+
+
+@dataclass
+class RoboPartyRPO_CSVConfig:
+    """
+    CSV configuration for RoboParty RPO (Atom01) robot.
+    
+    Joint order (23 DOF):
+    - Left leg (6): left_thigh_yaw, left_thigh_roll, left_thigh_pitch, left_knee, left_ankle_pitch, left_ankle_roll
+    - Right leg (6): right_thigh_yaw, right_thigh_roll, right_thigh_pitch, right_knee, right_ankle_pitch, right_ankle_roll
+    - Torso (1): torso_joint
+    - Left arm (5): left_arm_pitch, left_arm_roll, left_arm_yaw, left_elbow_pitch, left_elbow_yaw
+    - Right arm (5): right_arm_pitch, right_arm_roll, right_arm_yaw, right_elbow_pitch, right_elbow_yaw
+    """
+    name: str = "roboparty_rpo_23dof"
+    csv_header: ClassVar[List[str]] = [
+        "Frame",
+        "root_translateX", "root_translateY", "root_translateZ",
+        "root_rotateX", "root_rotateY", "root_rotateZ",
+        "left_thigh_yaw_joint_dof", "left_thigh_roll_joint_dof", "left_thigh_pitch_joint_dof",
+        "left_knee_joint_dof", "left_ankle_pitch_joint_dof", "left_ankle_roll_joint_dof",
+        "right_thigh_yaw_joint_dof", "right_thigh_roll_joint_dof", "right_thigh_pitch_joint_dof",
+        "right_knee_joint_dof", "right_ankle_pitch_joint_dof", "right_ankle_roll_joint_dof",
+        "torso_joint_dof",
+        "left_arm_pitch_joint_dof", "left_arm_roll_joint_dof", "left_arm_yaw_joint_dof",
+        "left_elbow_pitch_joint_dof", "left_elbow_yaw_joint_dof",
+        "right_arm_pitch_joint_dof", "right_arm_roll_joint_dof", "right_arm_yaw_joint_dof",
+        "right_elbow_pitch_joint_dof", "right_elbow_yaw_joint_dof"]
+
+    def to_anim_frame(self, csv_row: np.ndarray) -> np.ndarray:
+        """
+        Convert one CSV row (including frame index) into one anim buffer frame.
+        """
+        num_joint_dofs = csv_row.shape[0] - 1
+        anim_row = np.zeros(num_joint_dofs + 1, dtype=np.float32)
+
+        # translation (cm -> m)
+        anim_row[0:3] = csv_row[1:4] * 0.01
+
+        # rotation (euler deg -> quat)
+        euler = np.deg2rad(csv_row[4:7])
+        quat = wp.quat_rpy(euler[0], euler[1], euler[2])
+        anim_row[3:7] = quat
+
+        # remaining joints (deg -> rad)
+        anim_row[7:] = np.deg2rad(csv_row[7:])
+
+        return anim_row
+
+    def to_csv_row(self, frame_idx: int, anim_row: np.ndarray) -> List[float]:
+        """
+        Convert one anim buffer row into a CSV row with this config's layout.
+        """
+        # translation (m -> cm)
+        t = wp.vec3(*anim_row[0:3]) * 100.0
+        # root rotation (quat -> euler deg)
+        q = wp.quat(*anim_row[3:7])
+        euler = R.from_quat([q[0], q[1], q[2], q[3]]).as_euler("xyz", degrees=True)
+
+        row = [frame_idx, t[0], t[1], t[2], euler[0], euler[1], euler[2]]
+
+        # joints (rad -> deg)
+        row.extend(np.rad2deg(anim_row[7:]))
+
+        return row
+
+
+@dataclass
+class RoboPartyRPO_NPZCSVConfig:
+    """
+    CSV configuration for RoboParty RPO (Atom01) robot compatible with csv_to_npz.py format.
+    
+    Output format (no header, no frame index):
+    - Columns 0-2: root position (x, y, z) in meters
+    - Columns 3-6: root rotation as quaternion (x, y, z, w)
+    - Columns 7+: joint angles in radians (23 DOF)
+    """
+    name: str = "roboparty_rpo_23dof_npz"
+    
+    def to_csv_row(self, anim_row: np.ndarray) -> List[float]:
+        """
+        Convert one anim buffer row into a CSV row compatible with csv_to_npz.py.
+        """
+        return anim_row.tolist()
+
+
+def save_csv_npz_compatible(file_path: str, buffer: CSVAnimationBuffer, robot_type: str = "unitree_g1") -> None:
+    """
+    Save a ``CSVAnimationBuffer`` to a CSV file compatible with csv_to_npz.py.
+    
+    This format has no header and no frame index column:
+    - Columns 0-2: root position (x, y, z) in meters
+    - Columns 3-6: root rotation as quaternion (x, y, z, w)
+    - Columns 7+: joint angles in radians
+
+    Args:
+        file_path (str): The path where the CSV file will be saved.
+        buffer (CSVAnimationBuffer): The animation buffer containing frame data to be saved.
+        robot_type (str): The robot type. Supported: "unitree_g1", "roboparty_rpo". Defaults to "unitree_g1".
+
+    Raises:
+        RuntimeError: If the buffer is empty or invalid.
+        OSError: If the file cannot be opened or written.
+        ValueError: If the robot type is not supported.
+    """
+    if buffer is None or buffer.num_frames == 0:
+        raise RuntimeError("[ERROR]: Empty or invalid buffer.")
+    
+    # Select config based on robot type
+    if robot_type == "unitree_g1":
+        config = UnitreeG129DOF_NPZCSVConfig()
+    elif robot_type == "roboparty_rpo":
+        config = RoboPartyRPO_NPZCSVConfig()
+    else:
+        raise ValueError(f"[ERROR]: Unsupported robot type: {robot_type}. Supported types: unitree_g1, roboparty_rpo")
+    
+    with open(file_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        
+        for i in range(buffer.num_frames):
+            data = buffer.get_data(i)
+            row = config.to_csv_row(data)
             writer.writerow(row)
