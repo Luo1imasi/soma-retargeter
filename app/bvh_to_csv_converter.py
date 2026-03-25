@@ -49,10 +49,10 @@ class Viewer:
         self.playback_total_time = 0.0
 
         self.retarget_source_options = ['soma']
-        self.retarget_target_options = ['unitree_g1']
+        self.retarget_target_options = ['unitree_g1', 'roboparty_rpo']
         self.retarget_solver_options = ['Newton']
         self.retarget_solver_idx     = 0
-        self.retarget_target_idx     = 0
+        self.retarget_target_idx     = self.retarget_target_options.index(self.config.get('retarget_target', 'unitree_g1'))
         self.retarget_source_idx     = 0
 
         self.show_skeleton_mesh = True
@@ -63,25 +63,33 @@ class Viewer:
         self.viewer.renderer.set_title("BVH to CSV Converter")
         self.viewer.register_ui_callback(lambda ui: self.gui(ui), position="free")
 
-        g1_builder = newton.ModelBuilder()
-        g1_builder.add_mjcf(
-            newton.utils.download_asset("unitree_g1") / "mjcf/g1_29dof_rev_1_0.xml")
+        # Load robot model based on target type
+        retarget_target = self.config.get('retarget_target', 'unitree_g1')
+        robot_builder = newton.ModelBuilder()
+        if retarget_target == 'unitree_g1':
+            robot_builder.add_mjcf(
+                newton.utils.download_asset("unitree_g1") / "mjcf/g1_29dof_rev_1_0.xml")
+        elif retarget_target == 'roboparty_rpo':
+            robot_mjcf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../assets/robots/atom01/mjcf/atom01.xml"))
+            robot_builder.add_mjcf(robot_mjcf_path)
+        else:
+            raise ValueError(f"[ERROR]: Unknown retarget target: {retarget_target}")
         
         self.num_robots = 1
         self.robot_offsets = [wp.transform(wp.vec3(0.0, i - (self.num_robots - 1) / 2.0, 0.0), wp.quat_identity()) for i in range(self.num_robots)]
         builder = newton.ModelBuilder()
         builder.add_ground_plane()
         for _ in range(self.num_robots):
-            builder.add_builder(g1_builder, wp.transform_identity())
+            builder.add_builder(robot_builder, wp.transform_identity())
         self.model = builder.finalize()
 
         self.viewer.set_model(self.model)
         self.viewer.set_world_offsets([0, 0, 0])
         self.state = self.model.state()
 
-        self.g1_num_joint_q = self.model.joint_coord_count // self.model.articulation_count
-        self.g1_joint_q_offsets = [int(i * self.g1_num_joint_q) for i in range(self.model.articulation_count)]
-        self.g1_default_joint_q_values = self.model.joint_q.numpy()
+        self.robot_num_joint_q = self.model.joint_coord_count // self.model.articulation_count
+        self.robot_joint_q_offsets = [int(i * self.robot_num_joint_q) for i in range(self.model.articulation_count)]
+        self.robot_default_joint_q_values = self.model.joint_q.numpy()
 
         self.coordinate_renderer = CoordinateRenderer()
         self.skeleton = None
@@ -139,7 +147,7 @@ class Viewer:
         for i in range(self.num_robots):
             robot_offset = self.robot_offsets[i]
 
-            joint_q_offset = self.g1_joint_q_offsets[i]
+            joint_q_offset = self.robot_joint_q_offsets[i]
             if self.robot_csv_animation_buffers[i] is not None:
                 buffer = self.robot_csv_animation_buffers[i]
                 # Apply visual offset
@@ -147,18 +155,18 @@ class Viewer:
                 buffer.xform = robot_offset
 
                 data = buffer.sample(self.playback_time)
-                wp.copy(self.model.joint_q, wp.array(data, dtype=wp.float32), joint_q_offset, 0, self.g1_num_joint_q)
+                wp.copy(self.model.joint_q, wp.array(data, dtype=wp.float32), joint_q_offset, 0, self.robot_num_joint_q)
                 buffer.xform = prev_xform
             else:
                 root_tx = wp.mul(
                     robot_offset,
-                    wp.transform(*self.g1_default_joint_q_values[joint_q_offset:(joint_q_offset + 7)]))
+                    wp.transform(*self.robot_default_joint_q_values[joint_q_offset:(joint_q_offset + 7)]))
 
                 wp.copy(
                     self.model.joint_q,
-                    wp.array(self.g1_default_joint_q_values[joint_q_offset:(joint_q_offset + self.g1_num_joint_q)], dtype=wp.float32),
+                    wp.array(self.robot_default_joint_q_values[joint_q_offset:(joint_q_offset + self.robot_num_joint_q)], dtype=wp.float32),
                     joint_q_offset,
-                    0, self.g1_num_joint_q)
+                    0, self.robot_num_joint_q)
                 wp.copy(self.model.joint_q, wp.array(root_tx[0:7], dtype=wp.float32), joint_q_offset, 0, 7)
 
         newton.eval_fk(self.model, self.model.joint_q, self.model.joint_qd, self.state, None)
