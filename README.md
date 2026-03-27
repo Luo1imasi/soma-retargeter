@@ -137,6 +137,12 @@ SOMA Retargeter is a support tool within the SOMA ecosystem for humanoid motion 
 * [ProtoMotions](https://github.com/NVlabs/ProtoMotions) - GPU-accelerated simulation and learning framework for training physically simulated digital humans and humanoid robots
 * [SONIC](https://nvlabs.github.io/GEAR-SONIC/) - Whole-body control for humanoid robots, training locomotion and interaction policies
 
+## Acknowledgments
+
+This project draws inspiration and builds upon excellent open-source work, including:
+* [GMR](https://github.com/YanjieZe/GMR) - General Motion Retargeting
+* [PyRoki](https://pyroki-toolkit.github.io/) - A Modular Toolkit for Robot Kinematic Optimization
+
 ## License
 
 This codebase is licensed under [Apache-2.0](LICENSE).
