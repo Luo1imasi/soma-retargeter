@@ -10,12 +10,14 @@
     "joint_limit_weight": 10.0,
     "smooth_joint_filter_weight": 5.5,
     "collision_weight" : 0.0,
-    "enable_post_processing" : true,
+    "enable_post_processing" : false,
 
     "smooth_joint_filter_objective_body_masks" : {
+        "left_thigh_yaw_link" : 0.1,
         "left_arm_pitch_link" : 0.1,
         "left_arm_roll_link"  : 1.0,
         "left_arm_yaw_link"   : 0.3,
+        "right_thigh_yaw_link": 0.1,
         "right_arm_pitch_link": 0.1,
         "right_arm_roll_link" : 1.0,
         "right_arm_yaw_link"  : 0.3
@@ -25,86 +27,86 @@
         "Hips": {
             "t_body" : "base_link",
             "r_body" : "base_link",
-            "t_weight" : 30.0,
+            "t_weight" : 10.0,
             "r_weight" : 2.0
         },
         "Chest": {
             "t_body" : "torso_link",
             "r_body" : "torso_link",
-            "t_weight" : 0.7,
-            "r_weight" : 0.7
+            "t_weight" : 0.5,
+            "r_weight" : 0.5
         },
         "LeftArm": {
             "t_body" : "left_arm_roll_link",
             "r_body" : "left_arm_roll_link",
-            "t_weight" : 1.5,
-            "r_weight" : 0.15
+            "t_weight" : 0.5,
+            "r_weight" : 0.1
         },
         "LeftForeArm": {
             "t_body" : "left_elbow_pitch_link",
             "r_body" : "left_elbow_pitch_link",
             "t_weight" : 1.0,
-            "r_weight" : 1.0
+            "r_weight" : 0.5
         },
         "LeftHand": {
             "t_body" : "left_elbow_yaw_link",
             "r_body" : "left_elbow_yaw_link",
-            "t_weight" : 2.0,
-            "r_weight" : 1.2
+            "t_weight" : 1.0,
+            "r_weight" : 0.5
         },
         "RightArm": {
             "t_body" : "right_arm_roll_link",
             "r_body" : "right_arm_roll_link",
-            "t_weight" : 1.5,
-            "r_weight" : 0.15
+            "t_weight" : 0.5,
+            "r_weight" : 0.1
         },
         "RightForeArm": {
             "t_body" : "right_elbow_pitch_link",
             "r_body" : "right_elbow_pitch_link",
             "t_weight" : 1.0,
-            "r_weight" : 1.0
+            "r_weight" : 0.5
         },
         "RightHand": {
             "t_body" : "right_elbow_yaw_link",
             "r_body" : "right_elbow_yaw_link",
-            "t_weight" : 2.0,
-            "r_weight" : 1.2
+            "t_weight" : 1.0,
+            "r_weight" : 0.5
         },
         "LeftLeg": {
             "t_body" : "left_thigh_roll_link",
             "r_body" : "left_thigh_roll_link",
-            "t_weight" : 1.5,
-            "r_weight" : 0.15
+            "t_weight" : 0.5,
+            "r_weight" : 0.2
         },
         "LeftShin": {
             "t_body" : "left_knee_link",
             "r_body" : "left_knee_link",
             "t_weight" : 1.0,
-            "r_weight" : 1.0
+            "r_weight" : 0.5
         },
         "LeftFoot": {
             "t_body" : "left_ankle_roll_link",
             "r_body" : "left_ankle_roll_link",
-            "t_weight" : 30.0,
-            "r_weight" : 2.0
+            "t_weight" : 2.0,
+            "r_weight" : 1.0
         },
         "RightLeg": {
             "t_body" : "right_thigh_roll_link",
             "r_body" : "right_thigh_roll_link",
-            "t_weight" : 1.5,
-            "r_weight" : 0.15
+            "t_weight" : 0.5,
+            "r_weight" : 0.2
         },
         "RightShin": {
             "t_body" : "right_knee_link",
             "r_body" : "right_knee_link",
             "t_weight" : 1.0,
-            "r_weight" : 1.0
+            "r_weight" : 0.5
         },
         "RightFoot": {
             "t_body" : "right_ankle_roll_link",
             "r_body" : "right_ankle_roll_link",
-            "t_weight" : 30.0,
-            "r_weight" : 2.0
+            "t_weight" : 2.0,
+            "r_weight" : 1.0
         }
     }
 }
