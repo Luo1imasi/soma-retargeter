@@ -53,8 +53,12 @@ def compute_position_loss(
     tid = wp.tid()
     if mask[tid] < 0.5:
         return
-    pred_t = wp.transform_get_translation(predicted_effectors[tid]) - pred_root[0]
-    targ_t = wp.transform_get_translation(target_effectors[tid]) - targ_root[0]
+    if tid == 0:
+        pred_t = wp.transform_get_translation(predicted_effectors[tid])
+        targ_t = wp.transform_get_translation(target_effectors[tid])
+    else:
+        pred_t = wp.transform_get_translation(predicted_effectors[tid]) - pred_root[0]
+        targ_t = wp.transform_get_translation(target_effectors[tid]) - targ_root[0]
     diff = pred_t - targ_t
     wp.atomic_add(loss, 0, wp.dot(diff, diff))
 
